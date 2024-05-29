@@ -1,7 +1,7 @@
-import { BsSearch } from 'react-icons/bs'
-import styles from './Home.module.css'
-import { Link, useNavigate } from 'react-router-dom'
-import { FormEvent, useEffect, useState } from 'react'
+import { BsSearch } from 'react-icons/bs';
+import styles from './Home.module.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { FormEvent, useEffect, useState } from 'react';
 
 export interface CoinProps {
     id: string;
@@ -29,42 +29,47 @@ export function Home() {
     const [input, setInput] = useState("");
     const [coins, setCoins] = useState<CoinProps[]>([]);
     const [offset, setOffset] = useState(0);
+    const [filteredCoins, setFilteredCoins] = useState<CoinProps[]>([]);
 
     useEffect(() => {
         getData();
-    }, [offset])
+    }, [offset]);
+
+    useEffect(() => {
+        handleSearch();
+    }, [input, coins]);
 
     async function getData() {
         fetch(`https://api.coincap.io/v2/assets?limit=10&offset=${offset}`)
         .then(response => response.json())
         .then((data: DataProp) => {
-            const coinsData= data.data;
+            const coinsData = data.data;
 
             const price = Intl.NumberFormat("en-US", {
                 style: "currency",
                 currency: "USD"
-            })
+            });
 
             const priceCompact = Intl.NumberFormat("en-US", {
                 style: "currency",
                 currency: "USD",
                 notation: "compact"
-            })
+            });
 
-            const formatedResult = coinsData.map( (item) => {
+            const formatedResult = coinsData.map((item) => {
                 const formated = {
-                    ...item, 
+                    ...item,
                     formatedPrice: price.format(Number(item.priceUsd)),
                     formatedMarket: priceCompact.format(Number(item.marketCapUsd)),
                     formatedVolume: priceCompact.format(Number(item.volumeUsd24Hr))
-                }
+                };
 
                 return formated;
-            })
+            });
 
-            const listCoins = [...coins, ...formatedResult]
+            const listCoins = [...coins, ...formatedResult];
             setCoins(listCoins);
-        })
+        });
     }
 
     const navigate = useNavigate();
@@ -72,13 +77,20 @@ export function Home() {
     function handleSubmit(e: FormEvent) {
         e.preventDefault();
 
-        if(input === "") return;
+        if (input === "") return;
 
-        navigate(`/detail/${input}`)
+        navigate(`/detail/${input}`);
+    }
+
+    function handleSearch() {
+        const filtered = coins.filter(coin =>
+            coin.name.toLowerCase().includes(input.toLowerCase())
+        );
+        setFilteredCoins(filtered);
     }
 
     function handleGetMore() {
-        if(offset === 0) {
+        if (offset === 0) {
             setOffset(10);
             return;
         }
@@ -93,7 +105,7 @@ export function Home() {
                     type="text"
                     placeholder='Digite o nome da moeda... EX: bitcoin'
                     value={input}
-                    onChange={(e) => setInput(e.target.value)} 
+                    onChange={(e) => setInput(e.target.value)}
                 />
                 <button type="submit">
                     <BsSearch size={30} color='#FFF' />
@@ -112,43 +124,39 @@ export function Home() {
                 </thead>
 
                 <tbody id='tbody'>
-
-                    {coins.length > 0 && coins.map((item) => (
+                    {filteredCoins.length > 0 && filteredCoins.map((item) => (
                         <tr className={styles.tr} key={item.id}>
+                            <td className={styles.tdLabel} data-label="Moeda">
+                                <div className={styles.name}>
+                                    <img
+                                        className={styles.logo}
+                                        alt='Logo cripto'
+                                        src={`https://assets.coincap.io/assets/icons/${item.symbol.toLowerCase()}@2x.png`}
+                                    />
 
-                        <td className={styles.tdLabel} data-label="Moeda">
-                            <div className={styles.name}>
-                                <img
-                                    className={styles.logo}
-                                    alt='Logo cripto'
-                                    src={`https://assets.coincap.io/assets/icons/${item.symbol.toLowerCase()}@2x.png`}
-                                />
+                                    <Link to={`/detail/${item.id}`}>
+                                        <span>{item.name}</span> | {item.symbol}
+                                    </Link>
+                                </div>
+                            </td>
 
-                                <Link to={`/detail/${item.id}`}>
-                                    <span>{item.name}</span> | {item.symbol}
-                                </Link>
-                            </div>
-                        </td>
+                            <td className={styles.tdLabel} data-label="Valor Mercado">
+                                {item.formatedMarket}
+                            </td>
 
-                        <td className={styles.tdLabel} data-label="Valor Mercado">
-                            {item.formatedMarket}
-                        </td>
+                            <td className={styles.tdLabel} data-label="Preço">
+                                {item.formatedPrice}
+                            </td>
 
-                        <td className={styles.tdLabel} data-label="Preço">
-                            {item.formatedPrice}
-                        </td>
+                            <td className={styles.tdLabel} data-label="Volume">
+                                {item.formatedVolume}
+                            </td>
 
-                        <td className={styles.tdLabel} data-label="Volume">
-                            {item.formatedVolume}
-                        </td>
-
-                        <td className={Number(item.changePercent24Hr) > 0 ? styles.tdProfit : styles.tdLoss} data-label="Mudança 24h">
-                            <span>{Number(item.changePercent24Hr).toFixed(3)}</span>
-                        </td>
-
-                    </tr>
+                            <td className={Number(item.changePercent24Hr) > 0 ? styles.tdProfit : styles.tdLoss} data-label="Mudança 24h">
+                                <span>{Number(item.changePercent24Hr).toFixed(3)}</span>
+                            </td>
+                        </tr>
                     ))}
-
                 </tbody>
             </table>
 
@@ -156,5 +164,5 @@ export function Home() {
                 Carregar mais...
             </button>
         </main>
-    )
+    );
 }
