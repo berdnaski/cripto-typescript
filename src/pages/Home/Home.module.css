@@ -76,10 +76,11 @@ table td {
 }
 
 .buttonMore {
-    background-color: #30beff;
+    background-color: #570c44;
     padding: 8px 24px;
     color: #FFF;
-    border-radius: 8px;
+    font-weight: bold;
+    border-radius: 4px;
     margin: 14px 0;
 }
 

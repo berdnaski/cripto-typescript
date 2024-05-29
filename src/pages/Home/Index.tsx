@@ -3,7 +3,7 @@ import styles from './Home.module.css'
 import { Link, useNavigate } from 'react-router-dom'
 import { FormEvent, useEffect, useState } from 'react'
 
-interface CoinProps {
+export interface CoinProps {
     id: string;
     name: string;
     symbol: string;
@@ -28,13 +28,14 @@ interface DataProp {
 export function Home() {
     const [input, setInput] = useState("");
     const [coins, setCoins] = useState<CoinProps[]>([]);
+    const [offset, setOffset] = useState(0);
 
     useEffect(() => {
         getData();
-    }, [])
+    }, [offset])
 
     async function getData() {
-        fetch("https://api.coincap.io/v2/assets?limit=10&offset=0")
+        fetch(`https://api.coincap.io/v2/assets?limit=10&offset=${offset}`)
         .then(response => response.json())
         .then((data: DataProp) => {
             const coinsData= data.data;
@@ -61,7 +62,8 @@ export function Home() {
                 return formated;
             })
 
-            setCoins(formatedResult);
+            const listCoins = [...coins, ...formatedResult]
+            setCoins(listCoins);
         })
     }
 
@@ -76,7 +78,12 @@ export function Home() {
     }
 
     function handleGetMore() {
-        alert("teste")
+        if(offset === 0) {
+            setOffset(10);
+            return;
+        }
+
+        setOffset(offset + 10);
     }
 
     return (
@@ -116,6 +123,7 @@ export function Home() {
                                     alt='Logo cripto'
                                     src={`https://assets.coincap.io/assets/icons/${item.symbol.toLowerCase()}@2x.png`}
                                 />
+
                                 <Link to={`/detail/${item.id}`}>
                                     <span>{item.name}</span> | {item.symbol}
                                 </Link>
